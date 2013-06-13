@@ -4,7 +4,7 @@
   <title><![CDATA[Genetically Modified Origin]]></title>
   <link href="http://gglin.github.io/atom.xml" rel="self"/>
   <link href="http://gglin.github.io/"/>
-  <updated>2013-06-13T01:15:44-04:00</updated>
+  <updated>2013-06-13T12:22:25-04:00</updated>
   <id>http://gglin.github.io/</id>
   <author>
     <name><![CDATA[George L]]></name>
@@ -59,7 +59,7 @@ cat('Hello, world!\n')
 </ul>
 
 
-<p>OK that&rsquo;s enough.  Back to code!</p>
+<p>OK that&rsquo;s enough.  Back to code.  See you next time!</p>
 ]]></content>
   </entry>
   
