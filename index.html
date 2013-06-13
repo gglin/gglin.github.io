@@ -6,11 +6,11 @@
 <head>
   <meta charset="utf-8">
   <title>Genetically Modified Origin</title>
-  <meta name="author" content="George">
+  <meta name="author" content="George L">
 
   
-  <meta name="description" content="Hi, this is my first blog post! It&rsquo;s been ages since I last had a blog.
-">
+  <meta name="description" content="puts "Hello, world!" document.write('Hello, world!'); #import &lt;stdio.h&gt;
+int main( int argc, const char *argv[] ) { printf( "Hello world\n" ); &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,14 +19,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://gglin.github.io">
+  <link rel="canonical" href="http://gglin.github.io/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="Genetically Modified Origin" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/ender.js"></script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Genetically Modified Origin" type="application/atom+xml">
   <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
@@ -39,7 +38,7 @@
   <header role="banner"><hgroup>
   <h1><a href="/">Genetically Modified Origin</a></h1>
   
-    <h2>The (mis?)adventures of a newbie coder</h2>
+    <h2>George's Blog - Digital Adventures in The Big Apple</h2>
   
 </hgroup>
 
@@ -97,9 +96,48 @@
   </header>
 
 
-  <div class="entry-content"><h2>Hi, this is my first blog post!</h2>
+  <div class="entry-content"><pre><code>puts "Hello, world!"
 
-<p>It&rsquo;s been ages since I last had a blog.</p>
+document.write('Hello, world!');
+
+#import &lt;stdio.h&gt;
+int main( int argc, const char *argv[] ) {
+    printf( "Hello world\n" );
+    return 0;
+}
+
+public class HelloWorld {
+   public static void main(String[] args) {
+       System.out.println("Hello, world!");
+   }
+}
+
+print("Hello, world!")
+
+(display "Hello, world!")
+
+main = putStrLn "Hello, world!"
+
+cat('Hello, world!\n')
+</code></pre>
+
+<blockquote><p>&ldquo;A smooth sea never made a skilled sailor.&rdquo;</p></blockquote>
+
+<p>Hello, my name is George, and I&rsquo;m a student <a href="http://www.flatironschool.com" title="The Flatiron School">@flatironschool</a>, a 12-week intensive program for aspiring web developers. As part of the program, <a href="http://twitter.com/aviflombaum">@avi</a> has all students regularly maintain a blog.  So after many years of maintaining a digital footprint via only facebook and twitter, here I am!</p>
+
+<p><em>Above is a list of languages I am interested in learning, vaguely listed by interest level, though this is bound to change as I get to know more and more.</em></p>
+
+<h3>A little about me:</h3>
+
+<ul>
+<li>BS Chemical Engineering 2008, MIT</li>
+<li>Former Management Consultant</li>
+<li>Places lived: China, Central PA, Central NJ, Boston, NYC</li>
+<li>DOB: 1986-06-25</li>
+</ul>
+
+
+<p>OK that&rsquo;s enough.  Back to code!</p>
 </div>
   
   
@@ -135,7 +173,7 @@
   <a href="https://github.com/gglin">@gglin</a> on GitHub
   
   <script type="text/javascript">
-    $(document).ready(function(){
+    $.domReady(function(){
         if (!window.jXHR){
             var jxhr = document.createElement('script');
             jxhr.type = 'text/javascript';
@@ -165,8 +203,8 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - George -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+  Copyright &copy; 2013 - George L -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a>. Design by <a href="http://octopressthemes.com">Octopress Themes</a>. Background image by <a href="http://www.flickr.com/photos/89433098@N04/">Florian Kraft Fotografie</a></span>
 </p>
 
 </footer>
@@ -191,7 +229,7 @@
 <script>(function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];
   if (d.getElementById(id)) {return;}
-  js = d.createElement(s); js.id = id; js.async = true;
+  js = d.createElement(s); js.id = id;
   js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
   fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));</script>
