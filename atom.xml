@@ -4,7 +4,7 @@
   <title><![CDATA[Genetically Modified Origin]]></title>
   <link href="http://gglin.github.io/atom.xml" rel="self"/>
   <link href="http://gglin.github.io/"/>
-  <updated>2013-06-14T02:36:45-04:00</updated>
+  <updated>2013-06-24T03:46:06-04:00</updated>
   <id>http://gglin.github.io/</id>
   <author>
     <name><![CDATA[George L]]></name>
@@ -12,6 +12,70 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[I did it My Way]]></title>
+    <link href="http://gglin.github.io/blog/2013/06/24/i-did-it-my-way/"/>
+    <updated>2013-06-24T01:04:00-04:00</updated>
+    <id>http://gglin.github.io/blog/2013/06/24/i-did-it-my-way</id>
+    <content type="html"><![CDATA[<h3>The Web as a Virtual Country</h3>
+
+<p>So my parents came into town this weekend to visit, and I was explaining to them all the things I&rsquo;ve learned in the last month or so: HTML, CSS, Javascript, SQL, Ruby, MVC, Rails, etc.</p>
+
+<p>We&rsquo;ve only covered HTML, CSS, SQL, and Ruby, and how the Internet works so far in class (the other topics being self-taught so far based on prepwork), but regardless, I was explaining to my parents how I understood all these things fit together.  Specifically, what the heck is the difference between PHP, Python, Ruby, Ruby on Rails, and all these terms that outside observers might hear about but not understand the difference between.</p>
+
+<p>Struggling to explain these concepts in a short, concise manner, I remembered an analogy I had heard before: <em>the web as a virtual city</em>. Extending this analogy further:</p>
+
+<ul>
+<li>The browser / internet infrastructure  =~  cars / highways</li>
+<li>Websites  =~  actual stores or buildings</li>
+<li>Web application frameworks (e.g. Rails)  =~  framework or skeleton of a building</li>
+<li>Programming languages  =~  building materials (e.g., Ruby could be wood, Python could be brick, PHP could be straw &ndash; <em>just as an example, not implying anything about the merits of any language</em>)</li>
+</ul>
+
+
+<p>We always talk about coders as &ldquo;builders&rdquo;, and I think it&rsquo;s even more true than what most people realize.  What I essentially learned in the last month were the tools of the craft, the art of carpentry or brick-laying.  Now it&rsquo;s time to learn how to build buildings.  But before I start building buildings, I need to understand what a house actually looks like and how it functions.</p>
+
+<h3>Introducing: Sinatra</h3>
+
+<p>According to the <a href="http://www.sinatrarb.com/intro.html">official website</a>, <strong>Sinatra</strong> &ldquo;is a <a href="http://en.wikipedia.org/wiki/Domain-specific_language">DSL</a> for quickly creating web applications in Ruby with minimal effort.&rdquo;  If we keep with the analogy, Sinatra is a much easier framework for building simple houses, while something like Rails is a lot more powerful and allows us to build all kinds of buildings, but at the expense of requiring a lot more complexity.</p>
+
+<p><em>On a side note, did you know that if you search for &ldquo;Sinatra&rdquo; on Google, the first result is actually Ruby Sinatra and not Frank Sinatra? Crazy eh? Thanks <a href="https://twitter.com/StevenABrooks">@StevenABrooks</a> for the tip!</em></p>
+
+<p>So obviously it makes sense to learn how to build a simple house before building a skyscraper, eh?  And even before I start to build houses, it might be a good idea to look at what other peoples&#8217; houses look like, eh? Luckily thanks to the open source movement, we can see exactly how sites are built and learn how to organize our tools (i.e. codebase) to best start the building process.  Thanks, yer ol&#8217; <a href="http://www.github.com">Hub o&#8217; Gits</a>!</p>
+
+<p>I picked a Sinatra web app, and analyzed its codebase to learn how its floors are laid, how rooms are connected, etc, to better design my own floorplans in the future.  And what better app to look at than the appropriately-named &ldquo;Dashing&rdquo;?</p>
+
+<h3>Sinatra is not Dashing, but Dashing is Sinatra?</h3>
+
+<p><a href="http://shopify.github.io/dashing/">Dashing</a> by <a href="http://www.shopify.com">Shopify</a> definitely lives up to its name &ndash; check out demos <a href="http://dashingdemo.herokuapp.com/sample">here</a> and <a href="http://dashingdemo.herokuapp.com/sampletv">here</a>.  Dashing is &ldquo;a Sinatra based framework that lets you build beautiful dashboards&rdquo;. Its UI is similar to Window 8&rsquo;s, except without the evil-empirishness of a close-sourced monopoly; I can look behind the curtain to see a <a href="https://github.com/Shopify/dashing"> well-designed, simple codebase in the repo</a>.  Here&rsquo;s what it looks like:</p>
+
+<ul>
+<li><strong>/bin</strong> &ndash; inside is a single ruby binary for the command line inputs</li>
+<li><strong>/javascripts</strong> &ndash; where all the magic of the UI happens. The .js files inside include JQuery, as well as a batman.js file, which seems to be linked to <a href="https://github.com/Shopify/batman">another Shopify product</a></li>
+<li><strong>/lib</strong> &ndash; there is only single file in here, dashing.rb.  This appears to be the actual Sinatra application for interfacing with the web servers and &lsquo;net.  So even though this file is very small compared to some others, it is essential &ndash; without it this would not be a web app.</li>
+<li><strong>/templates</strong> &ndash; there are a few miscellaneous templates in here.  The biggie is a folder inside called <strong>/projects</strong>.  The way Dashing works, you can generate entire projects with the Dashing gem, by typing &lsquo;dashing new sweet_dashboard_project&rsquo; into CLI, which will use this <strong>/projects</strong> folder as a template</li>
+<li><strong>/test</strong> &ndash; a pretty simple set of tests in the test suite</li>
+<li><strong>.gitignore</strong> &ndash; pretty standard; this tells git what kinds of files to ignore when creating or changing a repo</li>
+<li><strong>Gemfile</strong> &ndash; all Ruby gems have this</li>
+<li><strong>MIT-LICENSE</strong> &ndash; pretty standard</li>
+<li><strong>README.md</strong> &ndash; pretty standard</li>
+<li><strong>Rakefile</strong> &ndash; pretty standard. This rakefile makes it super simple for Ruby to run your test suite</li>
+<li><strong>dashing.gemspec</strong> &ndash; This contains gem specifications &ndash; pretty standard for when we want package a library into a Ruby gem</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Summary - Extending Ruby with Ruby]]></title>
+    <link href="http://gglin.github.io/blog/2013/06/17/how-to-best-use-github/"/>
+    <updated>2013-06-17T07:57:00-04:00</updated>
+    <id>http://gglin.github.io/blog/2013/06/17/how-to-best-use-github</id>
+    <content type="html"><![CDATA[<p>(More to come &ndash; summary of the presentation below)
+<a href="https://speakerdeck.com/michaelfairley/extending-ruby-with-ruby">https://speakerdeck.com/michaelfairley/extending-ruby-with-ruby</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[What I learned about programming from a delivery guy]]></title>
