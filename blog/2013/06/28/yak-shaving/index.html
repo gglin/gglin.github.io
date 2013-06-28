@@ -173,7 +173,7 @@ in programming now!</p>
 
 
 <ul>
-<li>After creating this program on my own computer, I wanted to import this to the web so that it could run as a CLI &ldquo;web app&rdquo; over the internet.  I was inspired by a few command-line interface websites: <a href="http://uni.xkcd.com">xkcd</a>, <a href="http://goosh.org/#login">goosh</a>, After many futile attempts at finding an answer which made me question my google-fu, I finally found something reasonable which had been staring at me in the first page of google results: a Ruby gem called Rack Webconsole! After installing, more banging my head on the wall and finagling, I finally got it to work:</li>
+<li>After creating this program on my own computer, I wanted to import this to the web so that it could run as a CLI &ldquo;web app&rdquo; over the internet.  I was inspired by a few command-line interface websites: <a href="http://uni.xkcd.com">xkcd</a>, <a href="http://goosh.org/#login">goosh</a>, After many futile attempts at finding an answer which made me question my google-fu, I finally found something reasonable which had been staring at me in the first page of google results: a Ruby gem called <a href="http://codegram.github.io/rack-webconsole/">Rack Webconsole</a>! After installing, more banging my head on the wall and finagling, I finally got it to work:</li>
 </ul>
 
 
@@ -196,7 +196,7 @@ in programming now!</p>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 </pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
-</span><span class='line'>    <span class="nb">puts</span> <span class="n">string</span> <span class="c1">#=&gt; doesn&#39;t work righ</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="n">string</span> <span class="c1">#=&gt; doesn&#39;t work right</span>
 </span><span class='line'>    <span class="c1"># Ripl.shell.print_result(string)</span>
 </span><span class='line'>    <span class="c1"># Rack::Webconsole::Shell::eval_query(string)[:result]</span>
 </span><span class='line'>    <span class="c1"># Ripl.shell.loop_eval(string)</span>
@@ -205,7 +205,7 @@ in programming now!</p>
 </span><span class='line'>
 </span><span class='line'>  <span class="k">def</span> <span class="nf">input</span>
 </span><span class='line'>    <span class="c1"># gets  =&gt; no longer works</span>
-</span><span class='line'>    <span class="no">Ripl</span><span class="o">.</span><span class="n">shell</span><span class="o">.</span><span class="n">loop_once</span>
+</span><span class='line'>    <span class="c1"># Ripl.shell.loop_once</span>
 </span><span class='line'>    <span class="c1">#   ==&gt; fix this too...</span>
 </span><span class='line'>  <span class="k">end</span>
 </span></code></pre></td></tr></table></div></figure>
