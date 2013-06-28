@@ -4,7 +4,7 @@
   <title><![CDATA[Genetically Modified Origin]]></title>
   <link href="http://gglin.github.io/atom.xml" rel="self"/>
   <link href="http://gglin.github.io/"/>
-  <updated>2013-06-24T03:46:06-04:00</updated>
+  <updated>2013-06-28T08:55:33-04:00</updated>
   <id>http://gglin.github.io/</id>
   <author>
     <name><![CDATA[George L]]></name>
@@ -12,6 +12,141 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[You can learn a lot from shaving a yak]]></title>
+    <link href="http://gglin.github.io/blog/2013/06/28/yak-shaving/"/>
+    <updated>2013-06-28T07:41:00-04:00</updated>
+    <id>http://gglin.github.io/blog/2013/06/28/yak-shaving</id>
+    <content type="html"><![CDATA[<p>On the third day of class, we learned a term called &ldquo;yak shaving&rdquo;.  The idea is that you want to do something, let&rsquo;s say change a lightbulb, but that ends up requiring you to do something else, which in turn requires you to do something else, which requires you to do something again&hellip;  After diving into subtask after subtask, eventually you find yourself shaving a yak when all you wanted to do was change your lightbulb!</p>
+
+<p><em>Etymology: the term is thought to have been coined at the MIT AI Lab circa 2000, as inspired by an episode of Ren &amp; Stimpy. Here are some definitions from various sources: <a href="http://projects.csail.mit.edu/gsb/old-archive/gsb-archive/gsb2000-02-11.html">MIT</a>, <a href="http://www.urbandictionary.com/define.php?term=yak%20shaving">Urbandictionary</a>, <a href="http://sethgodin.typepad.com/seths_blog/2005/03/dont_shave_that.html">Seth Godin</a> (who helped popularize the term)</em></p>
+
+<p>I didn&rsquo;t think much about the term until pretty recently.  In the last 2 weeks or so, as I&rsquo;ve been diving heavily into code, I&rsquo;ve found myself shaving yaks constantly &ndash; I can see why it&rsquo;s a &ldquo;thing&rdquo;
+in programming now!</p>
+
+<p>Case in point &ndash; the jukebox.  As my teammates can attest, I&rsquo;ve been building a command-line interface jukebox which when given a list of songs, will retrieve the songs&#8217; artists and genres, and allow the user to browse or choose by category and select a song to &ldquo;play&rdquo; (it only displays the song &amp; doesn&rsquo;t actually play it yet, haha).  Well technically, this was an assignment everyone had to do, but since I liked the idea I decided to take it a lot further. (Also, to order to generate a song list, we parsed a directory for mp3 files and built a library of artists, songs, and genres)</p>
+
+<p><a href="https://github.com/gglin/playlister-rb/blob/master/lib/models/jukebox.rb">My current version of the CLI jukebox</a> can not only browse by &ldquo;artist&rdquo;, &ldquo;song&rdquo;, or &ldquo;genre&rdquo;, but it can also search by artist, song, or genre, and whatever the results are of the current search or browsing results, you can keep entering input to further filter results, as well as choose a result by number (thanks <a href="http://www.twitter.com/ningbit">Ning</a> for some of the inspiration!)</p>
+
+<p>Here are some examples of yak shaving while making the CLI jukebox:</p>
+
+<ul>
+<li>In order to get the program to understand so many different kinds of user inputs, I ended up having to learn regular expressions (<a href="http://www.rubular.com">Rubular</a> is awesome!).  Specifically, valid commands that the program understands are stored in class constant:</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Valid Inputs </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">VALID_COMMANDS</span> <span class="o">=</span> <span class="o">[</span><span class="sr">/^(artist|song|genre)s?$/</span><span class="p">,</span> <span class="sr">/^(artist|song|genre)\s+\S+/</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;help&quot;</span><span class="p">,</span> <span class="s2">&quot;exit&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This allows for the program to understand the input &ldquo;artist(s)&rdquo;, &ldquo;song(s)&rdquo;, &ldquo;genre(s)&rdquo;, as well as the input &ldquo;artist [name or number]&rdquo;, &ldquo;song [name or number]&rdquo;, &ldquo;genre [name or number]&rdquo;.</p>
+
+<p>Here is what my code for seeing whether or not a valid command is recognized looks like:</p>
+
+<figure class='code'><figcaption><span>See if input is valid</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="vi">@valid_command_entered</span> <span class="o">=</span> <span class="o">!</span><span class="no">VALID_COMMANDS</span><span class="o">.</span><span class="n">grep</span><span class="p">(</span><span class="vi">@command</span><span class="p">)</span><span class="o">.</span><span class="n">empty?</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This doesn&rsquo;t work though.  After some banging my head on the wall, I ended up reading the <a href="http://ruby-doc.org/core-2.0/Enumerable.html#method-i-grep">&ldquo;grep&rdquo; documentation in the Ruby Enumerables module</a>, and discovered the problem:</p>
+
+<figure class='code'><figcaption><span>Problem</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'> <span class="c1"># [element1, element2, etc].grep(pattern) only matches when pattern === element</span>
+</span><span class='line'> <span class="c1"># However, if element is a regular expression grep will fail to find the match</span>
+</span><span class='line'>  <span class="c1">#    /abc/ === &quot;abc&quot; returns true</span>
+</span><span class='line'>  <span class="c1">#    However, &quot;abc&quot; === /abc/ returns false</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="c1"># We want to enhance the functionality so that it also matches when element =~ pattern</span>
+</span><span class='line'>  <span class="c1">#    /abc/ =~ &quot;abc&quot;  &amp;  &quot;abc&quot; =~ /abc/ will both find a match</span>
+</span><span class='line'>  <span class="c1">#    if element and pattern have the same class, &quot;=~&quot; won&#39;t work and we will have to use ==</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Simple enough.  We open the class and give it a new method grep2:</p>
+
+<figure class='code'><figcaption><span>The Fix</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="o">::</span><span class="nb">Array</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">grep2</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">select</span> <span class="k">do</span> <span class="o">|</span><span class="n">element</span><span class="o">|</span>
+</span><span class='line'>      <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="n">element</span><span class="o">.</span><span class="n">class</span>
+</span><span class='line'>        <span class="n">element</span> <span class="o">==</span> <span class="n">pattern</span>
+</span><span class='line'>      <span class="k">else</span>
+</span><span class='line'>        <span class="n">element</span> <span class="o">=~</span> <span class="n">pattern</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>After creating this program on my own computer, I wanted to import this to the web so that it could run as a CLI &ldquo;web app&rdquo; over the internet.  I was inspired by a few command-line interface websites: <a href="http://uni.xkcd.com">xkcd</a>, <a href="http://goosh.org/#login">goosh</a>, After many futile attempts at finding an answer which made me question my google-fu, I finally found something reasonable which had been staring at me in the first page of google results: a Ruby gem called Rack Webconsole! After installing, more banging my head on the wall and finagling, I finally got it to work:</li>
+</ul>
+
+
+<p><img src="http://i.imgur.com/Sgbpwb2.png">
+<img src="http://i.imgur.com/E633goF.png"></p>
+
+<p>Now I need to learn how to get &ldquo;puts&rdquo; and &ldquo;gets&rdquo; to work in the webconsole interface instead of on the server-side console:</p>
+
+<figure class='code'><figcaption><span>To be fixed&#8230;</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="n">string</span> <span class="c1">#=&gt; doesn&#39;t work righ</span>
+</span><span class='line'>    <span class="c1"># Ripl.shell.print_result(string)</span>
+</span><span class='line'>    <span class="c1"># Rack::Webconsole::Shell::eval_query(string)[:result]</span>
+</span><span class='line'>    <span class="c1"># Ripl.shell.loop_eval(string)</span>
+</span><span class='line'>    <span class="c1">#   ==&gt; none of the above work...</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">input</span>
+</span><span class='line'>    <span class="c1"># gets  =&gt; no longer works</span>
+</span><span class='line'>    <span class="no">Ripl</span><span class="o">.</span><span class="n">shell</span><span class="o">.</span><span class="n">loop_once</span>
+</span><span class='line'>    <span class="c1">#   ==&gt; fix this too...</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>I also learned about <a href="https://news.ycombinator.com/item?id=2802281">a little bit about XRSF</a>, a way for bad people to hack into your website, as I was learning about Webconsole.  In retrospect, using this gem probably isn&rsquo;t the best idea.  Maybe I&rsquo;ll learn enough javascript by looking at the source code of sites like xkcd and goosh to make this work someday.</li>
+</ul>
+
+
+<p>There&rsquo;s always more to learn, and to do something I thought would be so simple ended up requiring hours and hours of banging my head on the way.  However, in retrospect it was all a great learning experience and helped me become a better coder, as I suspect yak shaving can oftentimes be.</p>
+
+<p>It&rsquo;s the journey that matters, not the destination.  However, a program that doesn&rsquo;t work right isn&rsquo;t useful either.  So I guess both are important &ndash; enjoy the view along the way, but to learn the most, don&rsquo;t stay satisfied until you reach the destination.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[I did it My Way]]></title>
