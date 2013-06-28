@@ -4,7 +4,7 @@
   <title><![CDATA[Genetically Modified Origin]]></title>
   <link href="http://gglin.github.io/atom.xml" rel="self"/>
   <link href="http://gglin.github.io/"/>
-  <updated>2013-06-28T09:31:16-04:00</updated>
+  <updated>2013-06-28T10:02:33-04:00</updated>
   <id>http://gglin.github.io/</id>
   <author>
     <name><![CDATA[George L]]></name>
@@ -29,7 +29,7 @@ in programming now!</p>
 
 <p><a href="https://github.com/gglin/playlister-rb/blob/master/lib/models/jukebox.rb">My current version of the CLI jukebox</a> can not only browse by &ldquo;artist&rdquo;, &ldquo;song&rdquo;, or &ldquo;genre&rdquo;, but it can also search by artist, song, or genre, and whatever the results are of the current search or browsing results, you can keep entering input to further filter results, as well as choose a result by number (thanks <a href="http://www.twitter.com/ningbit">Ning</a> for some of the inspiration!)</p>
 
-<p>Here are some examples of yak shaving while making the CLI jukebox:</p>
+<h3>Here are some examples of yak shaving while making the CLI jukebox:</h3>
 
 <ul>
 <li>In order to get the program to understand so many different kinds of user inputs, I ended up having to learn regular expressions (<a href="http://www.rubular.com">Rubular</a> is awesome!).  Specifically, valid commands that the program understands are stored in class constant:</li>
@@ -138,9 +138,11 @@ in programming now!</p>
 
 
 <ul>
-<li>I also learned about <a href="https://news.ycombinator.com/item?id=2802281">a little bit about XRSF</a>, a way for bad people to hack into your website, as I was learning about Webconsole.  In retrospect, using this gem probably isn&rsquo;t the best idea.  Maybe I&rsquo;ll learn enough javascript by looking at the source code of sites like xkcd and goosh to make this work someday.</li>
+<li>I also learned about <a href="https://news.ycombinator.com/item?id=2802281">a little bit about XRSF</a>, a way for bad people to hack into your website, as I was learning about Webconsole.  In retrospect, using this gem probably isn&rsquo;t the best idea to use in production, though it&rsquo;s pretty awesome in development.  Maybe I&rsquo;ll learn enough javascript by looking at the source code of sites like xkcd and goosh to make this work someday.</li>
 </ul>
 
+
+<h3>Enjoying the view and striving for the destination</h3>
 
 <p>There&rsquo;s always more to learn, and to do something I thought would be so simple ended up requiring hours and hours of banging my head on the way.  However, in retrospect it was all a great learning experience and helped me become a better coder, as I suspect yak shaving can oftentimes be.</p>
 
