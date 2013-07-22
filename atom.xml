@@ -4,7 +4,7 @@
   <title><![CDATA[Genetically Modified Origin]]></title>
   <link href="http://gglin.github.io/atom.xml" rel="self"/>
   <link href="http://gglin.github.io/"/>
-  <updated>2013-06-28T10:02:33-04:00</updated>
+  <updated>2013-07-22T03:16:32-04:00</updated>
   <id>http://gglin.github.io/</id>
   <author>
     <name><![CDATA[George L]]></name>
@@ -12,6 +12,559 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Monkeypatching Ruby core]]></title>
+    <link href="http://gglin.github.io/blog/2013/07/17/monkeypatching-ruby-core/"/>
+    <updated>2013-07-17T17:04:00-04:00</updated>
+    <id>http://gglin.github.io/blog/2013/07/17/monkeypatching-ruby-core</id>
+    <content type="html"><![CDATA[<p><em>A general disclaimer:
+I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the following is not best practice or a great idea or whatnot</em></p>
+
+<p>As I&rsquo;ve been learning and becoming familiar with Ruby and its various libraries / gems, one thing I&rsquo;ve found myself doing often is opening up <code>irb</code> or <code>pry</code> and playing around all different kinds of methods, classes, and modules.  However, I&rsquo;ve found that it&rsquo;s hard to explore this consistently without having to constantly refer back to the documentation for what methods exist for each class / module or what the structure of the classes or modules are.  I just want to play around and avoid constantly going back online or to the source code! The solution: I ended up modifying the core <code>~/.irbrc</code> and <code>~/.pryrc</code> files to monkeypatch Ruby&rsquo;s core classes, so that everytime I start up <code>irb</code>, <code>pry</code>, or <code>rails console</code> I get access to my custom methods.  Here&rsquo;s what my file looks like:</p>
+
+<figure class='code'><figcaption><span>.irbrc or .pryrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Object</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#   all methods named &#39;local_(*)_methods&#39; </span>
+</span><span class='line'>  <span class="c1">#   should return &#39;(*)_methods&#39; minus those that exist in Object</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">method_missing</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">klass</span> <span class="o">=</span> <span class="no">Object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">0</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;local_&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[-</span><span class="mi">7</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;methods&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">to_sym</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="n">klass</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Module</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">class_methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="nb">self</span><span class="o">.</span><span class="n">instance_methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">class_ancestors</span>
+</span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">ancestors</span><span class="o">.</span><span class="n">select</span><span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="o">|</span> <span class="n">a</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Class</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">module_ancestors</span>
+</span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">ancestors</span><span class="o">.</span><span class="n">select</span><span class="p">{</span><span class="o">|</span><span class="n">a</span><span class="o">|</span> <span class="n">a</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subthings</span><span class="p">(</span><span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">result</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">collect</span> <span class="p">{</span><span class="o">|</span><span class="n">const_name</span><span class="o">|</span> <span class="nb">const_get</span><span class="p">(</span><span class="n">const_name</span><span class="p">)}</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="k">yield</span><span class="p">(</span><span class="n">const</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="o">[]</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">recursive</span> <span class="o">==</span> <span class="kp">false</span>
+</span><span class='line'>      <span class="n">result</span><span class="o">.</span><span class="n">uniq</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">looper</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">clone</span>
+</span><span class='line'>      <span class="n">looper</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">thing</span><span class="o">|</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">thing</span><span class="o">.</span><span class="n">subthings</span><span class="p">(</span><span class="kp">false</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">subthing</span><span class="o">|</span>
+</span><span class='line'>          <span class="n">subthing</span><span class="o">.</span><span class="n">subthings</span><span class="p">(</span><span class="kp">false</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">subsubthing</span><span class="o">|</span>
+</span><span class='line'>            <span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">subsubthing</span><span class="p">)</span>
+</span><span class='line'>          <span class="k">end</span>
+</span><span class='line'>          <span class="n">result</span> <span class="o">&lt;&lt;</span> <span class="n">thing</span><span class="o">.</span><span class="n">subthings</span><span class="p">(</span><span class="n">recursive</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="n">result</span><span class="o">.</span><span class="n">flatten</span><span class="o">.</span><span class="n">uniq</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># http://www.natontesting.com/2010/06/30/how-to-get-the-submodules-of-a-ruby-module/</span>
+</span><span class='line'>  <span class="c1"># return only immediate nested namespace modules</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">submodules</span><span class="p">(</span><span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">subthings</span><span class="p">(</span><span class="n">recursive</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># return only immediate nested namespace classes</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subclasses</span><span class="p">(</span><span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">subthings</span><span class="p">(</span><span class="n">recursive</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Class</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subconstructs</span><span class="p">(</span><span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">subthings</span><span class="p">(</span><span class="n">recursive</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Class</span> <span class="o">||</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># returns all nested namespace modules</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subconstruct_modules</span>
+</span><span class='line'>    <span class="n">subconstructs</span><span class="p">(</span><span class="kp">true</span><span class="p">)</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># returns all nested namespace classes</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subconstruct_classes</span>
+</span><span class='line'>    <span class="n">subconstructs</span><span class="p">(</span><span class="kp">true</span><span class="p">)</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">==</span> <span class="no">Class</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># retrieves non-class, non-module constant names</span>
+</span><span class='line'>  <span class="c1"># e.g. Math.subconstants =&gt; [3.14159, 2.71828]</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subconstants</span><span class="p">(</span><span class="n">recursive</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">subthings</span><span class="p">(</span><span class="n">recursive</span><span class="p">)</span> <span class="p">{</span><span class="o">|</span><span class="n">const</span><span class="o">|</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">!=</span> <span class="no">Class</span> <span class="o">&amp;&amp;</span> <span class="n">const</span><span class="o">.</span><span class="n">class</span> <span class="o">!=</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># retrieves non-class, non-module constant names</span>
+</span><span class='line'>  <span class="c1"># e.g. Math.subconstant_names =&gt; [:PI, :E]</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">subconstant_names</span>
+</span><span class='line'>    <span class="nb">constants</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span><span class="o">|</span><span class="n">const_name</span><span class="o">|</span> <span class="nb">const_get</span><span class="p">(</span><span class="n">const_name</span><span class="p">)</span><span class="o">.</span><span class="n">class</span> <span class="o">!=</span> <span class="no">Class</span> <span class="o">&amp;&amp;</span> <span class="nb">const_get</span><span class="p">(</span><span class="n">const_name</span><span class="p">)</span><span class="o">.</span><span class="n">class</span> <span class="o">!=</span> <span class="no">Module</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Class</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">child_classes</span>
+</span><span class='line'>    <span class="no">ObjectSpace</span><span class="o">.</span><span class="n">each_object</span><span class="p">(</span><span class="no">Class</span><span class="p">)</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span> <span class="o">|</span><span class="n">klass</span><span class="o">|</span> <span class="n">klass</span> <span class="o">&lt;</span> <span class="nb">self</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">children</span>
+</span><span class='line'>    <span class="n">child_classes</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">siblings</span>
+</span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">superclass</span><span class="o">.</span><span class="n">child_classes</span> <span class="o">-</span> <span class="o">[</span><span class="nb">self</span><span class="o">]</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, I can much more easily explore methods, classes, modules and other Ruby constructs:</p>
+
+<h3>Exploring Methods</h3>
+
+<ul>
+<li>any method which ends with the word <code>"methods"</code>, i.e. returns an array of the defined methods for an object, whether it is all methods, instance methods, private methods, or whatever else, can now be prefixed with <code>"local_"</code> to return a much shorter array of just methods which aren&rsquo;t already defined for all Ruby Objects (though you can modify this default to return the difference with any class).
+
+<ul>
+<li>Ruby does have a built-in way to retrieve only methods defined in the immediate scope, not any mixed-in modules or superclasses, by setting the argument in <code>xxx_methods(arg)</code> so that <code>arg = false</code>. However, having a <code>local_xxx_methods</code> is more customizable, and may be more telling in many cases, such as where you are totally unfamiliar with a class or module and want to see not just how it is different from its immediate ancestors, but overall, i.e. to see the methods it inherited from everything but the Object class.</li>
+</ul>
+</li>
+</ul>
+
+
+<br>
+
+
+<h3>Exploring Namespaces</h3>
+
+<ul>
+<li><p>When I call ancestors on a module, the list of results returned is a mix of the modules mixed in and the superclasses.  Breaking these into two methods, <code>module_ancestors</code> and <code>class_ancestors</code>, helps me to better understand the inheritance chain of a given module or class.  For example, it&rsquo;s much clearer now that the class inheritance chain for <code>Fixnum</code> is <code>[Fixnum, Integer, Numeric, Object, BasicObject]</code>, while the modules <code>[Comparable, Kernel]</code> are only mixed in.</p></li>
+<li><p>For a given namespace, such as <code>ActiveRecord::Base</code>, I was curious to see what the various modules and classes that exist under that namespace are, as there is (1) no easy way to see all of these without consulting the source code, which is massive for something like ActiveRecord, and not trivial to find and explore, and (2) no easy way to tell the difference between modules, classes, and other constants under that namespace.</p>
+
+<ul>
+<li>I initially consulted a StackOverflow post that explains how to do this, and wrote up the methods <code>subconstruct</code> and <code>submodule</code>.  Unfortunately, these only look for subconstructs within subconstructs and submodules within submodules&hellip;</li>
+<li>There are many cases where in the nested namespaces, you could have a construct in a module in a construct in a module, or anything else.  Although more complicated, I eventually came up with a way to do this using a &ldquo;subthing&rdquo; helper method, which is a ~20 line monstrosity I&rsquo;m not happy with.  Regardless, the methods <code>subconstruct_classes</code> and <code>subconstruct_methods</code> will look into all nested namespaces, no matter how deep, and retrieve all classes or modules.</li>
+</ul>
+</li>
+</ul>
+
+
+<br>
+
+
+<ul>
+<li>Modifying the above code slightly allows for retrieval of non-module, non-class constants for a given module &ndash; for example, finding that the only constants that exist for the <code>Math</code> module are <code>:PI</code> and <code>:E</code> using <code>subconstants</code> and <code>subconstant_names</code></li>
+</ul>
+
+
+<h3>Exploring Class Inheritance</h3>
+
+<ul>
+<li>Finally, for classes, there is an easy built-in way to look up the inheritance chain and find the parent of a class using the <code>superclass</code> method.  Unfortunately the opposite isn&rsquo;t true &ndash; there&rsquo;s no built-in way to find all children of a parent class.  Fortunately Ruby has module called <code>ObjectSpace</code> which allows for traversal of all living objects in memory, allowing for a simple <code>child_classes</code> (&amp; alias <code>children</code>) method to be defined.  Note that this is <strong>NOT</strong> the same thing as the <code>subclasses</code> method I mentioned earlier &ndash; the latter only cares about namespaces, i.e. <code>BaseModule::AnotherModule::SubClass</code>, while <code>child_classes</code> is concerned with class inheritance, i.e. <code>ChildClass &lt; ParentClass</code>.</li>
+</ul>
+
+
+<h3>Not finding giants to stand on the shoulders of, aka It&rsquo;s been done before</h3>
+
+<p>Of course, it was only after I had written all of these that I found there&rsquo;s much more experienced coders who have done a lot of this already! Here are some (probably better) ways to accomplish what I monkeypatched:</p>
+
+<ul>
+<li><p>There is an entire gem which consists of libraries which extend the core capabilities of Ruby&rsquo;s built-in constructs: <a href="https://github.com/rubyworks/facets">Facets</a>.  A lot of the methods from Facets do the above, probably in a better way.  Updates to Facets have been infrequent in the last year, but nevertheless it seems to have tons of potentially useful additions to core Ruby.</p></li>
+<li><p>There are in gems which make it much easier to print readable, colorful Ruby &ndash; for example, the &ldquo;y&rdquo; method in YAML, &ldquo;pp&rdquo; for prettyprint, &ldquo;pretty_generate&rdquo; in JSON.  Among these is a great little gem called <a href="https://github.com/michaeldv/awesome_print">Awesome Print</a>, which not only formats and colorizes the output, but also adds additional helpful info, such as the superclass of the printed object, the index of each element in an array, and vertically aligning the hash rocket in a hash so that the keys and values are easier to read.  To always include awesome print, I added this to my .pryrc as per instructions:</p></li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s2">&quot;awesome_print&quot;</span>
+</span><span class='line'><span class="no">AwesomePrint</span><span class="o">.</span><span class="n">pry!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, this solves the problem of being able to tell the difference between class and module ancestors. For example, with ap enabled, <code>CodeRay::WordList::CaseIgnoring.ancestors</code> returns the following:</p>
+
+<p><img src="http://i.imgur.com/ET92gHl.png"></p>
+
+<p>This is clearly much easier to read and tells you not only which ancestors are classes, but what each ancestor&rsquo;s superclass is.</p>
+
+<p>Regardless, by doing these monkeypatches, I&rsquo;ve found it much easier to navigate around all kinds of objects and methods in Ruby to learn more about it, without necessarily having to go back to the source code &ndash; for example, find a specific class within <code>ActiveRecord::Base</code> and then find all the local_methods for that class.  Even if there is still a lot of code I could change /  clean up, this was a great learning experience to understand Ruby more deeply. As they say, it&rsquo;s about the journey, not just the destination.</p>
+
+<p><em>Thanks to the following posts on StackOverflow for guidance:</em></p>
+
+<ol>
+<li><a href="http://www.natontesting.com/2010/06/30/how-to-get-the-submodules-of-a-ruby-module/">http://www.natontesting.com/2010/06/30/how-to-get-the-submodules-of-a-ruby-module/</a></li>
+<li><a href="http://stackoverflow.com/questions/2393697/look-up-all-descendants-of-a-class-in-ruby">http://stackoverflow.com/questions/2393697/look-up-all-descendants-of-a-class-in-ruby</a></li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Summary - Extending Ruby with Ruby]]></title>
+    <link href="http://gglin.github.io/blog/2013/07/04/how-to-best-use-github/"/>
+    <updated>2013-07-04T07:57:00-04:00</updated>
+    <id>http://gglin.github.io/blog/2013/07/04/how-to-best-use-github</id>
+    <content type="html"><![CDATA[<p>I find metaprogramming to be a fascinating subject.  Code that writes itself! Keep DRY! Do crazy things in 10 lines that might otherwise take 100 or even be impossible!</p>
+
+<p>Naturally, I was attracted to a presentation <a href="https://twitter.com/michaelfairley">Michael Fairley</a> gave entitled &ldquo;Extending Ruby with Ruby&rdquo;.  Well, that and the fact that Michael&rsquo;s name reminded me of Michelle Fairley, who plays Catelyn Stark on my favorite show, Game of Thrones.</p>
+
+<script async class="speakerdeck-embed" data-id="4f9861a8eb6cd200ef00fbb8" data-ratio="1.04918032786885" src="http://gglin.github.io//speakerdeck.com/assets/embed.js"></script>
+
+
+<p>His central thesis is that Rubyists usually think of metaprogramming as a tool used for two things &ndash; keeping DRY and saving some typing, and monkeypatching a library that doesn&rsquo;t work as well as you would like.  However, Ruby&rsquo;s metaprogramming capabilities are much more powerful than this, and you can use Ruby to easily add new, awesome features to the language itself.  He gives a few specific examples, drawing inspiration from other languages:</p>
+
+<h3>Function Decorators from Python</h3>
+
+<p><strong><em>Python</em></strong> has a design pattern called &ldquo;<a href="http://www.artima.com/weblogs/viewpost.jsp?thread=240808">function decorators</a>&rdquo;, which allow us to inject or change code directly into a method, for additional clarity and to avoid writing a lot of boilerplate code.  For example:</p>
+
+<figure class='code'><figcaption><span>Function Decorator Example in Python</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="nd">@transactional</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">send_money</span><span class="p">(</span><span class="n">from</span><span class="p">,</span> <span class="n">to</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">from</span><span class="o">.</span><span class="n">balance</span> <span class="o">-=</span> <span class="n">amount</span>
+</span><span class='line'>  <span class="n">to</span><span class="o">.</span><span class="n">balance</span> <span class="o">+=</span> <span class="n">amount</span>
+</span><span class='line'>  <span class="n">from</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">to</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This allows the send_money method to be wrapped in a &ldquo;transactional&rdquo; function, i.e. the send_money method won&rsquo;t execute to the database unless every transaction in it is successful; otherwise all changes are rolled back.  This is defined by the &ldquo;transactional&rdquo; function, defined elsewhere but used to &ldquo;decorate&rdquo; the top of this method.  In Ruby we could use blocks or modify the method after the fact, but this is not clean as you can no longer trace execution of the method from top to bottom.</p>
+
+<p>Luckily, even though Python has this cool feature that doesn&rsquo;t exist in Ruby, we can add this functionality to Ruby itself given its extensible nature.  Michael created a neat gem, <a href="https://github.com/michaelfairley/method_decorators">method_decorators</a>, which does exactly this (there is <a href="https://github.com/fredwu/ruby_decorators">another gem</a> which does something similar). The amazing thing is that the core added functionality is accomplished in a <a href="https://github.com/michaelfairley/method_decorators/blob/master/lib/method_decorators/decorator.rb">little more than a dozen lines of</a> <a href="https://github.com/michaelfairley/method_decorators/blob/master/lib/method_decorators.rb">code</a>! The result of that is we can now mimic function decorators in Ruby:</p>
+
+<figure class='code'><figcaption><span>Function Decorator Added to Ruby</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">+</span><span class="no">Transactional</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">send_money</span><span class="p">(</span><span class="n">from</span><span class="p">,</span> <span class="n">to</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">from</span><span class="o">.</span><span class="n">balance</span> <span class="o">-=</span> <span class="n">amount</span>
+</span><span class='line'>  <span class="n">to</span><span class="o">.</span><span class="n">balance</span> <span class="o">+=</span> <span class="n">amount</span>
+</span><span class='line'>  <span class="n">from</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">to</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Partial Applications from Scala</h3>
+
+<p>In <strong><em>Scala</em></strong>, bulk operations on a collection of items (aka enumerables in Ruby), such as map, filter, and reduce, can be shorthanded using an underscore (&ldquo;_&rdquo;) for clarity.  This is part of a concept known as <a href="http://en.wikipedia.org/wiki/Partial_application">partial applications</a>:</p>
+
+<figure class='code'><figcaption><span>Making code pretty in Scala</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">map</span><span class="o">(</span><span class="n">i</span> <span class="k">=&gt;</span> <span class="n">i</span><span class="o">.</span><span class="n">toString</span><span class="o">)</span> <span class="c1">// List(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;)</span>
+</span><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">toString</span><span class="o">)</span>      <span class="c1">// List(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ruby has something similar:</p>
+
+<figure class='code'><figcaption><span>Making code pretty in Ruby</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">map</span><span class="p">{</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="n">i</span><span class="o">.</span><span class="n">to_s</span> <span class="p">}</span> <span class="c1"># [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:to_s</span><span class="p">)</span>       <span class="c1"># [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>However, Scala has support for more complex versions of these anonymous functions which Ruby does not:</p>
+
+<figure class='code'><figcaption><span>Making code pretty in Scala which doesn&#8217;t work in Ruby</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">reduce</span><span class="o">((</span><span class="n">i</span><span class="o">,</span><span class="n">j</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">i</span> <span class="o">+</span> <span class="o">(</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span><span class="o">))</span> <span class="c1">// 11</span>
+</span><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">reduce</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="o">(</span><span class="k">_</span> <span class="o">*</span> <span class="mi">2</span><span class="o">))</span>          <span class="c1">// 11</span>
+</span><span class='line'>
+</span><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">filter</span><span class="o">(</span><span class="n">i</span> <span class="k">=&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="o">)</span>       <span class="c1">// List(1)</span>
+</span><span class='line'><span class="nc">List</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="mi">2</span><span class="o">,</span><span class="mi">3</span><span class="o">).</span><span class="n">filter</span><span class="o">(</span><span class="mi">2</span> <span class="o">*</span> <span class="k">_</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="o">)</span>            <span class="c1">// List(1)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once again, thanks to the power of Ruby metaprogramming, we can accomplish something similar in Ruby with just a few lines of code! The key is defining a &ldquo;_&rdquo; (underscore) method in the base Object class which can take a block (see slides 88-109 for details).  With the added features, Ruby now has a similar functionality:</p>
+
+<figure class='code'><figcaption><span>After monkeypatching Ruby</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">reduce</span><span class="p">{</span> <span class="o">|</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="o">|</span> <span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="p">}</span> <span class="c1"># 11</span>
+</span><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">reduce</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">_</span><span class="p">{</span><span class="n">_</span> <span class="o">+</span> <span class="p">(</span><span class="n">_</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)}</span> <span class="p">)</span>   <span class="c1"># 11</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">select</span><span class="p">{</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="p">}</span>     <span class="c1"># [1]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">].</span><span class="n">select</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">_</span><span class="p">{</span><span class="mi">2</span> <span class="o">*</span> <span class="n">_</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">}</span> <span class="p">)</span>     <span class="c1"># [1]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, monkeypatching the Object class with something as basic as an underscore is probably not the best idea, but it does show the power of Ruby in being able to extend itself and mimic other languages.</p>
+
+<h3>Lazy Evaluation from Haskell</h3>
+
+<p>The last example Michael gives is <a href="http://en.wikipedia.org/wiki/Lazy_evaluation">lazy evaluations</a> in <strong><em>Haskell</em></strong>, e.g. not executing an http request until it is needed.  We can easily define a Lazy class to be used as a wrapper (or even as a method decorator, ala the first example) to accomplish something similar:</p>
+
+<figure class='code'><figcaption><span>Lazy Evaluation class</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Lazy</span> <span class="o">&lt;</span> <span class="no">BasicObject</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@block</span> <span class="o">=</span> <span class="n">block</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">method_missing</span><span class="p">(</span><span class="nb">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@result</span> <span class="o">||=</span> <span class="vi">@block</span><span class="o">.</span><span class="n">call</span>
+</span><span class='line'>    <span class="vi">@result</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">method</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now if compare these two blocks of code:</p>
+
+<figure class='code'><figcaption><span>without Lazy Eval</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">three</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;2&quot;</span>
+</span><span class='line'>  <span class="mi">3</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">three</span>
+</span><span class='line'><span class="nb">puts</span> <span class="s2">&quot;1&quot;</span>
+</span><span class='line'><span class="nb">puts</span> <span class="n">x</span>
+</span><span class='line'><span class="c1"># this will print out 2, 1, 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>with Lazy Eval</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">three</span>
+</span><span class='line'>  <span class="no">Lazy</span><span class="o">.</span><span class="n">new</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="s2">&quot;2&quot;</span>
+</span><span class='line'>    <span class="mi">3</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">x</span> <span class="o">=</span> <span class="n">three</span>
+</span><span class='line'><span class="nb">puts</span> <span class="s2">&quot;1&quot;</span>
+</span><span class='line'><span class="nb">puts</span> <span class="n">x</span>
+</span><span class='line'><span class="c1"># this will print out 1, 2, 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, for something absolutely bonkers, Michael changes the way Ruby as a language works so that EVERYTHING can use lazy evaluation, mimicking Haskell. He is able to do this via the <em>ObjectSpace</em> class and <em>instance_methods</em> method, which allows him to loop through every method in every module and class (with some exceptions):</p>
+
+<figure class='code'><figcaption><span>Craziness in Ruby</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">modules</span> <span class="o">=</span> <span class="no">ObjectSpace</span><span class="o">.</span><span class="n">each_object</span><span class="p">(</span><span class="no">Module</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">modules</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">k</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">k</span><span class="o">.</span><span class="n">instance_methods</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
+</span><span class='line'>    <span class="k">next</span> <span class="k">if</span> <span class="o">.</span><span class="n">.</span><span class="o">.</span> <span class="c1"># some exceptions</span>
+</span><span class='line'>    <span class="n">im</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">instance_method</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">k</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:define_method</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">do</span> <span class="o">|*</span><span class="n">args</span><span class="o">|</span>
+</span><span class='line'>      <span class="no">Lazy</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="n">im</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This sounds a little dangerous to me, but it does have some practical applications.  For example, in a simple Rails app which might fetch tweets from the Twitter API:</p>
+
+<figure class='code'><figcaption><span>Lazy Evaluation applied to Rails</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Controller</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">index</span>
+</span><span class='line'>  <span class="vi">@tweets</span> <span class="o">=</span> <span class="no">Lazy</span><span class="o">.</span><span class="n">new</span> <span class="p">{</span> <span class="n">get_from_twitter_api</span> <span class="p">}</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># View</span>
+</span><span class='line'><span class="o">&lt;</span><span class="sx">% @tweets.each </span><span class="k">do</span> <span class="o">|</span><span class="n">tweet</span><span class="o">|</span> <span class="sx">%&gt;</span>
+</span><span class='line'><span class="sx">  &lt;%= tweet.author_name %&gt;</span><span class="p">:</span>
+</span><span class='line'>  <span class="o">&lt;%=</span> <span class="n">tweet</span><span class="o">.</span><span class="n">text</span> <span class="sx">%&gt;</span>
+</span><span class='line'><span class="sx">&lt;% end %&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Since we want the client browser to fetch the CSS and JS as quickly as possible, we can make the &ldquo;get_from_twitter_api&rdquo; request lazy.</p>
+
+<h3>The Power of Metaprogramming</h3>
+
+<p>Seeing these examples really made me appreciate the power of Ruby even more.  Like many things in life, I think the best things should be easy to learn, but hard to master.  It should cater to beginners (with convention over configuration) but still be powerful for the advanced (e.g. metaprogramming).</p>
+
+<p>One of the reasons I am where I am now is that I believe in the power of software to change the world, the power to fix problems, and as programmers I think this mindset should apply everywhere &ndash; not just the big macro problems in the world, but the small, nitty-gritty micro problems as well.  Software should facilitate answers to real-world huge problems such as &ldquo;how do I get to the nearest train station?&rdquo; or &ldquo;what are my friends doing?&rdquo;, but it should also facilitate answers to problems such as &ldquo;can I get my programming language to behave the way I want it to?&rdquo;  Before you can change the world, you should be able to change yourself.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[You can learn a lot from shaving a yak]]></title>
@@ -201,16 +754,6 @@ in programming now!</p>
 <li><strong>dashing.gemspec</strong> &ndash; This contains gem specifications &ndash; pretty standard for when we want package a library into a Ruby gem</li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Summary - Extending Ruby with Ruby]]></title>
-    <link href="http://gglin.github.io/blog/2013/06/17/how-to-best-use-github/"/>
-    <updated>2013-06-17T07:57:00-04:00</updated>
-    <id>http://gglin.github.io/blog/2013/06/17/how-to-best-use-github</id>
-    <content type="html"><![CDATA[<p>(More to come &ndash; summary of the presentation below)
-<a href="https://speakerdeck.com/michaelfairley/extending-ruby-with-ruby">https://speakerdeck.com/michaelfairley/extending-ruby-with-ruby</a></p>
 ]]></content>
   </entry>
   
