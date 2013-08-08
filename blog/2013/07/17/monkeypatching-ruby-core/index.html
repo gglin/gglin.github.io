@@ -5,12 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Monkeypatching Ruby core - Genetically Modified Origin</title>
+  <title>Exploring Ruby's Core (Methods, Modules, Classes, and more, oh my!) through Metaprogramming & Monkeypatching - Genetically Modified Origin</title>
   <meta name="author" content="George L">
 
   
   <meta name="description" content="A general disclaimer:
-I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the following is not best practice or a great idea &hellip;">
+I just learned Ruby ~3 months ago, so please let me know if any of this can be improved upon As I&rsquo;ve been learning and &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -68,7 +68,7 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
   
   <header>
     
-      <h1 class="entry-title">Monkeypatching Ruby Core</h1>
+      <h1 class="entry-title">Exploring Ruby's Core (Methods, Modules, Classes, and More, Oh My!) Through Metaprogramming & Monkeypatching</h1>
     
     
       <p class="meta">
@@ -94,9 +94,87 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 
 
 <div class="entry-content"><p><em>A general disclaimer:
-I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the following is not best practice or a great idea or whatnot</em></p>
+I just learned Ruby ~3 months ago, so please let me know if any of this can be improved upon</em></p>
 
-<p>As I&rsquo;ve been learning and becoming familiar with Ruby and its various libraries / gems, one thing I&rsquo;ve found myself doing often is opening up <code>irb</code> or <code>pry</code> and playing around all different kinds of methods, classes, and modules.  However, I&rsquo;ve found that it&rsquo;s hard to explore this consistently without having to constantly refer back to the documentation for what methods exist for each class / module or what the structure of the classes or modules are.  I just want to play around and avoid constantly going back online or to the source code! The solution: I ended up modifying the core <code>~/.irbrc</code> and <code>~/.pryrc</code> files to monkeypatch Ruby&rsquo;s core classes, so that everytime I start up <code>irb</code>, <code>pry</code>, or <code>rails console</code> I get access to my custom methods.  Here&rsquo;s what my file looks like:</p>
+<p>As I&rsquo;ve been learning and becoming familiar with Ruby and its various libraries / gems, one thing I&rsquo;ve found myself doing often is opening up <code>irb</code> or <code>pry</code> and playing around all different kinds of methods, classes, and modules.  However, I&rsquo;ve found that it&rsquo;s hard to explore this consistently without having to constantly refer back to the documentation for what methods exist for each class / module or what the structure of the classes or modules are.  I just want to play around and avoid constantly going back online or to the source code! The solution: I ended up modifying the core <code>~/.irbrc</code> and <code>~/.pryrc</code> files to monkeypatch Ruby&rsquo;s core classes, so that everytime I start up <code>irb</code>, <code>pry</code>, or <code>rails console</code> I get access to my custom methods.  Here&rsquo;s a link to what my .pryrc file looks like:</p>
+
+<p><a href="https://gist.github.com/gglin/5930277">https://gist.github.com/gglin/5930277</a></p>
+
+<p><em>If you want to see an example of all this in action, go to <a href="#usage">the end of this post</a></em></p>
+
+<p>Now, I can much more easily explore methods, classes, modules and other Ruby constructs:</p>
+
+<h3>Exploring Methods</h3>
+
+<ul>
+<li>any method which ends with the word <code>"methods"</code>, i.e. returns an array of the defined methods for an object, whether it is all methods, instance methods, private methods, or whatever else, can now be prefixed with <code>"local_"</code> to return a much shorter array of just methods which aren&rsquo;t already defined for all Ruby Objects (though you can modify this default to return the difference with any class).
+
+<ul>
+<li>Ruby does have a built-in way to retrieve only methods defined in the immediate scope, not any mixed-in modules or superclasses, by setting the argument in <code>xxx_methods(arg)</code> so that <code>arg = false</code>. However, having a <code>local_xxx_methods</code> is more customizable, and may be more telling in many cases, such as where you are totally unfamiliar with a class or module and want to see not just how it is different from its immediate ancestors, but overall, i.e. to see the methods it inherited from everything but the Object class.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>See code here:</p>
+
+<figure class='code'><figcaption><span>.irbrc or .pryrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Object</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#   all methods named &#39;local_(*)_methods&#39; </span>
+</span><span class='line'>  <span class="c1">#   should return &#39;(*)_methods&#39; minus those that exist in Object</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">method_missing</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">klass</span> <span class="o">=</span> <span class="no">Object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">0</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;local_&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[-</span><span class="mi">7</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;methods&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">to_sym</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="n">klass</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<br>
+
+
+<h3>Exploring Namespaces</h3>
+
+<ul>
+<li><p>When I call ancestors on a module, the list of results returned is a mix of the modules mixed in and the superclasses.  Breaking these into two methods, <code>module_ancestors</code> and <code>class_ancestors</code>, helps me to better understand the inheritance chain of a given module or class.  For example, it&rsquo;s much clearer now that the class inheritance chain for <code>Fixnum</code> is <code>[Fixnum, Integer, Numeric, Object, BasicObject]</code>, while the modules <code>[Comparable, Kernel]</code> are only mixed in.</p></li>
+<li><p>For a given namespace, such as <code>ActiveRecord::Base</code>, I was curious to see what the various modules and classes that exist under that namespace are, as there is (1) no easy way to see all of these without consulting the source code, which is massive for something like ActiveRecord, and not trivial to find and explore, and (2) no easy way to tell the difference between modules, classes, and other constants under that namespace.</p>
+
+<ul>
+<li>I initially consulted a StackOverflow post that explains how to do this, and wrote up the methods <code>subclasses</code> and <code>submodules</code>.  Unfortunately, these only look for subclasses within subclasses and submodules within submodules&hellip;</li>
+<li>There are many cases where in the nested namespaces, you could have a class in a module in a class in a module, or anything else.  Although more complicated, I eventually came up with a way to do this using a &ldquo;subthing&rdquo; helper method, which is a ~20 line monstrosity I&rsquo;m not happy with.  Regardless, the methods <code>subconstruct_classes</code> and <code>subconstruct_methods</code> will look into all nested namespaces, no matter how deep, and retrieve all classes or modules.</li>
+</ul>
+</li>
+</ul>
+
+
+<br>
+
+
+<ul>
+<li>Modifying the above code slightly allows for retrieval of non-module, non-class constants for a given module &ndash; for example, finding that the only constants that exist for the <code>Math</code> module are <code>:PI</code> &amp; <code>:E</code>, and that their values are 3.14159&hellip; &amp; 2.71828&hellip; using <code>subconstants</code> and <code>subconstant_names</code></li>
+</ul>
+
+
+<p>See code here:</p>
 
 <figure class='code'><figcaption><span>.irbrc or .pryrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -170,59 +248,7 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 <span class='line-number'>70</span>
 <span class='line-number'>71</span>
 <span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Object</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="c1">#   all methods named &#39;local_(*)_methods&#39; </span>
-</span><span class='line'>  <span class="c1">#   should return &#39;(*)_methods&#39; minus those that exist in Object</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">method_missing</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">klass</span> <span class="o">=</span> <span class="no">Object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">0</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;local_&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[-</span><span class="mi">7</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;methods&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">to_sym</span>
-</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="n">klass</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">else</span>
-</span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Module</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Module</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="k">def</span> <span class="nf">class_methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
 </span><span class='line'>    <span class="nb">self</span><span class="o">.</span><span class="n">methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="nb">self</span><span class="o">.</span><span class="n">instance_methods</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
@@ -294,10 +320,34 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 </span><span class='line'>  <span class="k">end</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">Class</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Exploring Class Inheritance</h3>
+
+<ul>
+<li>Finally, for classes, there is an easy built-in way to look up the inheritance chain and find the parent of a class using the <code>superclass</code> method.  Unfortunately the opposite isn&rsquo;t true &ndash; there&rsquo;s no built-in way to find all children of a parent class.  Fortunately Ruby has module called <code>ObjectSpace</code> which allows for traversal of all living objects in memory, allowing for a simple <code>child_classes</code> (&amp; alias <code>children</code>) method to be defined.  Note that this is <strong>NOT</strong> the same thing as the <code>subclasses</code> method I mentioned earlier &ndash; the latter only cares about namespaces, i.e. <code>BaseModule::AnotherModule::SubClass</code>, while <code>child_classes</code> is concerned with class inheritance, i.e. <code>ChildClass &lt; ParentClass</code>.</li>
+</ul>
+
+
+<p>See code here:</p>
+
+<figure class='code'><figcaption><span>.irbrc or .pryrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Class</span>
 </span><span class='line'>
 </span><span class='line'>  <span class="k">def</span> <span class="nf">child_classes</span>
 </span><span class='line'>    <span class="no">ObjectSpace</span><span class="o">.</span><span class="n">each_object</span><span class="p">(</span><span class="no">Class</span><span class="p">)</span><span class="o">.</span><span class="n">select</span> <span class="p">{</span> <span class="o">|</span><span class="n">klass</span><span class="o">|</span> <span class="n">klass</span> <span class="o">&lt;</span> <span class="nb">self</span> <span class="p">}</span>
@@ -315,52 +365,6 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Now, I can much more easily explore methods, classes, modules and other Ruby constructs:</p>
-
-<h3>Exploring Methods</h3>
-
-<ul>
-<li>any method which ends with the word <code>"methods"</code>, i.e. returns an array of the defined methods for an object, whether it is all methods, instance methods, private methods, or whatever else, can now be prefixed with <code>"local_"</code> to return a much shorter array of just methods which aren&rsquo;t already defined for all Ruby Objects (though you can modify this default to return the difference with any class).
-
-<ul>
-<li>Ruby does have a built-in way to retrieve only methods defined in the immediate scope, not any mixed-in modules or superclasses, by setting the argument in <code>xxx_methods(arg)</code> so that <code>arg = false</code>. However, having a <code>local_xxx_methods</code> is more customizable, and may be more telling in many cases, such as where you are totally unfamiliar with a class or module and want to see not just how it is different from its immediate ancestors, but overall, i.e. to see the methods it inherited from everything but the Object class.</li>
-</ul>
-</li>
-</ul>
-
-
-<br>
-
-
-<h3>Exploring Namespaces</h3>
-
-<ul>
-<li><p>When I call ancestors on a module, the list of results returned is a mix of the modules mixed in and the superclasses.  Breaking these into two methods, <code>module_ancestors</code> and <code>class_ancestors</code>, helps me to better understand the inheritance chain of a given module or class.  For example, it&rsquo;s much clearer now that the class inheritance chain for <code>Fixnum</code> is <code>[Fixnum, Integer, Numeric, Object, BasicObject]</code>, while the modules <code>[Comparable, Kernel]</code> are only mixed in.</p></li>
-<li><p>For a given namespace, such as <code>ActiveRecord::Base</code>, I was curious to see what the various modules and classes that exist under that namespace are, as there is (1) no easy way to see all of these without consulting the source code, which is massive for something like ActiveRecord, and not trivial to find and explore, and (2) no easy way to tell the difference between modules, classes, and other constants under that namespace.</p>
-
-<ul>
-<li>I initially consulted a StackOverflow post that explains how to do this, and wrote up the methods <code>subconstruct</code> and <code>submodule</code>.  Unfortunately, these only look for subconstructs within subconstructs and submodules within submodules&hellip;</li>
-<li>There are many cases where in the nested namespaces, you could have a construct in a module in a construct in a module, or anything else.  Although more complicated, I eventually came up with a way to do this using a &ldquo;subthing&rdquo; helper method, which is a ~20 line monstrosity I&rsquo;m not happy with.  Regardless, the methods <code>subconstruct_classes</code> and <code>subconstruct_methods</code> will look into all nested namespaces, no matter how deep, and retrieve all classes or modules.</li>
-</ul>
-</li>
-</ul>
-
-
-<br>
-
-
-<ul>
-<li>Modifying the above code slightly allows for retrieval of non-module, non-class constants for a given module &ndash; for example, finding that the only constants that exist for the <code>Math</code> module are <code>:PI</code> and <code>:E</code> using <code>subconstants</code> and <code>subconstant_names</code></li>
-</ul>
-
-
-<h3>Exploring Class Inheritance</h3>
-
-<ul>
-<li>Finally, for classes, there is an easy built-in way to look up the inheritance chain and find the parent of a class using the <code>superclass</code> method.  Unfortunately the opposite isn&rsquo;t true &ndash; there&rsquo;s no built-in way to find all children of a parent class.  Fortunately Ruby has module called <code>ObjectSpace</code> which allows for traversal of all living objects in memory, allowing for a simple <code>child_classes</code> (&amp; alias <code>children</code>) method to be defined.  Note that this is <strong>NOT</strong> the same thing as the <code>subclasses</code> method I mentioned earlier &ndash; the latter only cares about namespaces, i.e. <code>BaseModule::AnotherModule::SubClass</code>, while <code>child_classes</code> is concerned with class inheritance, i.e. <code>ChildClass &lt; ParentClass</code>.</li>
-</ul>
-
-
 <h3>Not finding giants to stand on the shoulders of, aka It&rsquo;s been done before</h3>
 
 <p>Of course, it was only after I had written all of these that I found there&rsquo;s much more experienced coders who have done a lot of this already! Here are some (probably better) ways to accomplish what I monkeypatched:</p>
@@ -371,7 +375,7 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 </ul>
 
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span>.irbrc or .pryrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 </pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s2">&quot;awesome_print&quot;</span>
 </span><span class='line'><span class="no">AwesomePrint</span><span class="o">.</span><span class="n">pry!</span>
@@ -385,6 +389,265 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
 <p>This is clearly much easier to read and tells you not only which ancestors are classes, but what each ancestor&rsquo;s superclass is.</p>
 
 <p>Regardless, by doing these monkeypatches, I&rsquo;ve found it much easier to navigate around all kinds of objects and methods in Ruby to learn more about it, without necessarily having to go back to the source code &ndash; for example, find a specific class within <code>ActiveRecord::Base</code> and then find all the local_methods for that class.  Even if there is still a lot of code I could change /  clean up, this was a great learning experience to understand Ruby more deeply. As they say, it&rsquo;s about the journey, not just the destination.</p>
+
+<h3><span id="usage">Example of Usage</span></h3>
+
+<p>As an example of how I can use the code I wrote, I started pry and typed in:</p>
+
+<figure class='code'><figcaption><span>pry</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="no">CodeRay</span><span class="o">.</span><span class="n">subconstruct_modules</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:FileType</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Styles</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Encoders</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:PluginHost</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">4</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">5</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Scanners</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">6</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:GZip</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">7</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Tokens</span><span class="o">::</span><span class="no">Undumping</span>
+</span><span class='line'><span class="o">]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="no">CodeRay</span><span class="o">.</span><span class="n">subconstruct_classes</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">0</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="o">&lt;</span> <span class="no">Object</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">1</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Tokens</span> <span class="o">&lt;</span> <span class="nb">Array</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">2</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:WordList</span> <span class="o">&lt;</span> <span class="no">Hash</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">3</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Duo</span> <span class="o">&lt;</span> <span class="no">Object</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">4</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Encoders</span><span class="o">::</span><span class="no">Encoder</span> <span class="o">&lt;</span> <span class="no">Object</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">5</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Encoders</span><span class="o">::</span><span class="no">Terminal</span> <span class="o">&lt;</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Encoders</span><span class="o">::</span><span class="no">Encoder</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">6</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:PluginHost</span><span class="o">::</span><span class="no">PluginNotFound</span> <span class="o">&lt;</span> <span class="no">LoadError</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">7</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:PluginHost</span><span class="o">::</span><span class="no">HostNotFound</span> <span class="o">&lt;</span> <span class="no">LoadError</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">8</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Scanners</span><span class="o">::</span><span class="no">Scanner</span> <span class="o">&lt;</span> <span class="no">StringScanner</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">9</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Scanners</span><span class="o">::</span><span class="no">Ruby</span> <span class="o">&lt;</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Scanners</span><span class="o">::</span><span class="no">Scanner</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">10</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:WordList</span><span class="o">::</span><span class="no">CaseIgnoring</span> <span class="o">&lt;</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:WordList</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">11</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:FileType</span><span class="o">::</span><span class="no">UnknownFileType</span> <span class="o">&lt;</span> <span class="no">Exception</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">12</span><span class="o">]</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Styles</span><span class="o">::</span><span class="no">Style</span> <span class="o">&lt;</span> <span class="no">Object</span>
+</span><span class='line'><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now if I want to know the local class methods available for <code>CodeRay::WordList</code> and local instance methods availabe for <code>CodeRay::TokensProxy</code>, I can type:</p>
+
+<figure class='code'><figcaption><span>pry</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Styles</span><span class="o">::</span><span class="no">Style</span><span class="o">.</span><span class="n">local_methods</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span>      <span class="n">aliases</span><span class="p">()</span>       <span class="no">Class</span> <span class="p">(</span><span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">1</span><span class="o">]</span>  <span class="n">plugin_host</span><span class="p">(</span><span class="o">*</span><span class="n">host</span><span class="p">)</span>  <span class="no">Class</span> <span class="p">(</span><span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">2</span><span class="o">]</span>    <span class="n">plugin_id</span><span class="p">()</span>       <span class="no">Class</span> <span class="p">(</span><span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="n">register_for</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>     <span class="no">Class</span> <span class="p">(</span><span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">4</span><span class="o">]</span>        <span class="n">title</span><span class="p">(</span><span class="o">*</span><span class="n">title</span><span class="p">)</span> <span class="no">Class</span> <span class="p">(</span><span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:Plugin</span><span class="p">)</span>
+</span><span class='line'><span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">[</span><span class="mi">4</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span><span class="o">.</span><span class="n">local_instance_methods</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">0</span><span class="o">]</span>    <span class="n">block</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">1</span><span class="o">]</span>   <span class="n">block</span><span class="o">=</span><span class="p">(</span><span class="n">arg1</span><span class="p">)</span>              <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">2</span><span class="o">]</span>     <span class="n">each</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">blk</span><span class="p">)</span>       <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">3</span><span class="o">]</span>   <span class="n">encode</span><span class="p">(</span><span class="n">encoder</span><span class="p">,</span> <span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">4</span><span class="o">]</span>    <span class="n">input</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">5</span><span class="o">]</span>   <span class="n">input</span><span class="o">=</span><span class="p">(</span><span class="n">arg1</span><span class="p">)</span>              <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">6</span><span class="o">]</span>     <span class="n">lang</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">7</span><span class="o">]</span>    <span class="n">lang</span><span class="o">=</span><span class="p">(</span><span class="n">arg1</span><span class="p">)</span>              <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">8</span><span class="o">]</span>  <span class="n">options</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span> <span class="mi">9</span><span class="o">]</span> <span class="n">options</span><span class="o">=</span><span class="p">(</span><span class="n">arg1</span><span class="p">)</span>              <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">10</span><span class="o">]</span>  <span class="n">scanner</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">11</span><span class="o">]</span>   <span class="n">tokens</span><span class="p">()</span>                  <span class="ss">CodeRay</span><span class="p">:</span><span class="ss">:TokensProxy</span> <span class="p">(</span><span class="n">unbound</span><span class="p">)</span>
+</span><span class='line'><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Some other fun things to try out:</p>
+
+<figure class='code'><figcaption><span>pry</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">[</span><span class="mi">5</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="no">Fixnum</span><span class="o">.</span><span class="n">class_ancestors</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="no">Fixnum</span> <span class="o">&lt;</span> <span class="nb">Integer</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="nb">Integer</span> <span class="o">&lt;</span> <span class="no">Numeric</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="no">Numeric</span> <span class="o">&lt;</span> <span class="no">Object</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="no">Object</span> <span class="o">&lt;</span> <span class="no">BasicObject</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">4</span><span class="o">]</span> <span class="no">BasicObject</span>
+</span><span class='line'><span class="o">]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">6</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="no">Fixnum</span><span class="o">.</span><span class="n">siblings</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="no">Bignum</span> <span class="o">&lt;</span> <span class="nb">Integer</span>
+</span><span class='line'><span class="o">]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">7</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
+</span><span class='line'><span class="kp">true</span>
+</span><span class='line'><span class="o">[</span><span class="mi">8</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="ss">ActiveRecord</span><span class="p">:</span><span class="ss">:Base</span><span class="o">.</span><span class="n">subconstant_names</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="ss">:ACTIONS</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="ss">:UNASSIGNABLE_KEYS</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="ss">:CALLBACKS</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="ss">:ATTRIBUTE_TYPES_CACHED_BY_DEFAULT</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">4</span><span class="o">]</span> <span class="ss">:NAME_COMPILABLE_REGEXP</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">5</span><span class="o">]</span> <span class="ss">:CALL_COMPILABLE_REGEXP</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">6</span><span class="o">]</span> <span class="ss">:CALLBACK_FILTER_TYPES</span>
+</span><span class='line'><span class="o">]</span>
+</span><span class='line'><span class="o">[</span><span class="mi">9</span><span class="o">]</span> <span class="n">pry</span><span class="p">(</span><span class="n">main</span><span class="p">)</span><span class="o">&gt;</span> <span class="ss">ActiveRecord</span><span class="p">:</span><span class="ss">:Base</span><span class="o">.</span><span class="n">subconstants</span>
+</span><span class='line'><span class="o">[</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">[</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="ss">:create</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="ss">:destroy</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="ss">:update</span>
+</span><span class='line'>    <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="o">[</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="s2">&quot;_destroy&quot;</span>
+</span><span class='line'>    <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="o">[</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">0</span><span class="o">]</span> <span class="ss">:after_initialize</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">1</span><span class="o">]</span> <span class="ss">:after_find</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">2</span><span class="o">]</span> <span class="ss">:after_touch</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">3</span><span class="o">]</span> <span class="ss">:before_validation</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">4</span><span class="o">]</span> <span class="ss">:after_validation</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">5</span><span class="o">]</span> <span class="ss">:before_save</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">6</span><span class="o">]</span> <span class="ss">:around_save</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">7</span><span class="o">]</span> <span class="ss">:after_save</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">8</span><span class="o">]</span> <span class="ss">:before_create</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span> <span class="mi">9</span><span class="o">]</span> <span class="ss">:around_create</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">10</span><span class="o">]</span> <span class="ss">:after_create</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">11</span><span class="o">]</span> <span class="ss">:before_update</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">12</span><span class="o">]</span> <span class="ss">:around_update</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">13</span><span class="o">]</span> <span class="ss">:after_update</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">14</span><span class="o">]</span> <span class="ss">:before_destroy</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">15</span><span class="o">]</span> <span class="ss">:around_destroy</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">16</span><span class="o">]</span> <span class="ss">:after_destroy</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">17</span><span class="o">]</span> <span class="ss">:after_commit</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">18</span><span class="o">]</span> <span class="ss">:after_rollback</span>
+</span><span class='line'>    <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="o">[</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="ss">:datetime</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="ss">:timestamp</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="ss">:time</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="ss">:date</span>
+</span><span class='line'>    <span class="o">]</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">4</span><span class="o">]</span> <span class="sr">/\A[a-zA-Z_]\w*[!?=]?\z/</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">5</span><span class="o">]</span> <span class="sr">/\A[a-zA-Z_]\w*[!?]?\z/</span><span class="p">,</span>
+</span><span class='line'>    <span class="o">[</span><span class="mi">6</span><span class="o">]</span> <span class="o">[</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="ss">:before</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="ss">:after</span><span class="p">,</span>
+</span><span class='line'>        <span class="o">[</span><span class="mi">2</span><span class="o">]</span> <span class="ss">:around</span>
+</span><span class='line'>    <span class="o">]</span>
+</span><span class='line'><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p><em>Thanks to the following posts on StackOverflow for guidance:</em></p>
 
@@ -458,7 +721,7 @@ I just learned Ruby ~3 months ago, so forgive me (and let me know!) if any the f
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2013/07/17/monkeypatching-ruby-core/">Monkeypatching Ruby core</a>
+        <a href="/blog/2013/07/17/monkeypatching-ruby-core/">Exploring Ruby's Core (Methods, Modules, Classes, and more, oh my!) through Metaprogramming & Monkeypatching</a>
       </li>
     
       <li class="post">
