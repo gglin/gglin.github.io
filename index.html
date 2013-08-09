@@ -99,7 +99,7 @@ I just learned Ruby ~3 months ago, so please let me know if any of this can be i
   <div class="entry-content"><p><em>A general disclaimer:
 I just learned Ruby ~3 months ago, so please let me know if any of this can be improved upon</em></p>
 
-<p>As I&rsquo;ve been learning and becoming familiar with Ruby and its various libraries / gems, one thing I&rsquo;ve found myself doing often is opening up <code>irb</code> or <code>pry</code> and playing around all different kinds of methods, classes, and modules.  However, I&rsquo;ve found that it&rsquo;s hard to explore this consistently without having to constantly refer back to the documentation for what methods exist for each class / module or what the structure of the classes or modules are.  I just want to play around and avoid constantly going back online or to the source code! The solution: I ended up modifying the core <code>~/.irbrc</code> and <code>~/.pryrc</code> files to monkeypatch Ruby&rsquo;s core classes, so that everytime I start up <code>irb</code>, <code>pry</code>, or <code>rails console</code> I get access to my custom methods.  Here&rsquo;s a link to what my .pryrc file looks like:</p>
+<p>As I&rsquo;ve been learning and becoming familiar with Ruby and its various libraries / gems, one thing I&rsquo;ve found myself doing often is opening up <code>irb</code> or <code>pry</code> and playing around all different kinds of methods, classes, and modules.  However, I&rsquo;ve found that it&rsquo;s hard to explore this consistently without having to constantly refer back to the documentation for what methods exist for each class / module or what the structure of the classes or modules are.  I just want to play around and avoid constantly going back online or to the source code! The solution: I ended up modifying the core <code>~/.irbrc</code> and <code>~/.pryrc</code> files to monkeypatch Ruby&rsquo;s core classes, so that every time I start up <code>irb</code>, <code>pry</code>, or <code>rails console</code> I get access to my custom methods.  Here&rsquo;s a link to what my .pryrc file looks like:</p>
 
 <p><a href="https://gist.github.com/gglin/5930277">https://gist.github.com/gglin/5930277</a></p>
 
@@ -135,17 +135,29 @@ I just learned Ruby ~3 months ago, so please let me know if any of this can be i
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
 </pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Object</span>
 </span><span class='line'>
-</span><span class='line'>  <span class="c1">#   all methods named &#39;local_(*)_methods&#39; </span>
-</span><span class='line'>  <span class="c1">#   should return &#39;(*)_methods&#39; minus those that exist in Object</span>
+</span><span class='line'>  <span class="c1"># all methods named &#39;local_(*)_methods&#39; </span>
+</span><span class='line'>  <span class="c1"># should return &#39;(*)_methods&#39; minus those that exist in Object</span>
 </span><span class='line'>  <span class="k">def</span> <span class="nf">method_missing</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">klass</span> <span class="o">=</span> <span class="no">Object</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
 </span><span class='line'>    <span class="k">if</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">0</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;local_&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[-</span><span class="mi">7</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;methods&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">to_sym</span>
+</span><span class='line'>      <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span>
 </span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span> <span class="o">-</span> <span class="n">klass</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">subname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
 </span><span class='line'>    <span class="k">else</span>
 </span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
 </span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># core 2.0 documentation says &quot;DO NOT USE THIS DIRECTLY.&quot; - why?</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">respond_to_missing?</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">include_private</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">subname</span> <span class="o">=</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span>
+</span><span class='line'>    <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">0</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;local_&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[-</span><span class="mi">7</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">]</span> <span class="o">==</span> <span class="s2">&quot;methods&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">method_name</span><span class="o">.</span><span class="n">to_s</span><span class="o">[</span><span class="mi">6</span><span class="o">.</span><span class="n">.</span><span class="o">-</span><span class="mi">1</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="s2">&quot;local&quot;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nb">respond_to?</span><span class="p">(</span><span class="n">subname</span><span class="p">)</span> <span class="ow">or</span> <span class="k">super</span>
 </span><span class='line'>  <span class="k">end</span>
 </span><span class='line'>
 </span><span class='line'><span class="k">end</span>
@@ -454,7 +466,7 @@ I just learned Ruby ~3 months ago, so please let me know if any of this can be i
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>Now if I want to know the local class methods available for <code>CodeRay::WordList</code> and local instance methods availabe for <code>CodeRay::TokensProxy</code>, I can type:</p>
+<p>Now if I want to know the local class methods available for <code>CodeRay::WordList</code> and local instance methods available for <code>CodeRay::TokensProxy</code>, I can type:</p>
 
 <figure class='code'><figcaption><span>pry</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
